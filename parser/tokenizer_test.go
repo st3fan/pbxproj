@@ -71,21 +71,21 @@ func tokenizeFile(t *testing.T, path string) []Token {
 func Test_TokenizeBasic1(t *testing.T) {
 	compareTokens(t, tokenizeString(t, "things = { thing = Foo.swift; }"),
 		[]Token{
-			Token{Type: Identifier, Literal: "things"},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: Equals},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: OpenCurly},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: Identifier, Literal: "thing"},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: Equals},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: Identifier, Literal: "Foo.swift"},
-			Token{Type: Semicolon},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: CloseCurly},
-			Token{Type: EndOfLine},
+			Token{Type: Identifier, Literal: "things", Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: Equals, Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: OpenCurly, Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: Identifier, Literal: "thing", Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: Equals, Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: Identifier, Literal: "Foo.swift", Line: 1},
+			Token{Type: Semicolon, Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: CloseCurly, Line: 1},
+			Token{Type: EndOfLine, Line: 1},
 		},
 	)
 }
@@ -93,8 +93,8 @@ func Test_TokenizeBasic1(t *testing.T) {
 func Test_TokenizeComment1(t *testing.T) {
 	compareTokens(t, tokenizeString(t, "/* Hello */"),
 		[]Token{
-			Token{Type: Comment, Literal: "/* Hello */"},
-			Token{Type: EndOfLine},
+			Token{Type: Comment, Literal: "/* Hello */", Line: 1},
+			Token{Type: EndOfLine, Line: 1},
 		},
 	)
 }
@@ -102,12 +102,12 @@ func Test_TokenizeComment1(t *testing.T) {
 func Test_TokenizeComment2(t *testing.T) {
 	compareTokens(t, tokenizeString(t, "{ /* Hello */ }"),
 		[]Token{
-			Token{Type: OpenCurly},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: Comment, Literal: "/* Hello */"},
-			Token{Type: Whitespace, Literal: " "},
-			Token{Type: CloseCurly},
-			Token{Type: EndOfLine},
+			Token{Type: OpenCurly, Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: Comment, Literal: "/* Hello */", Line: 1},
+			Token{Type: Whitespace, Literal: " ", Line: 1},
+			Token{Type: CloseCurly, Line: 1},
+			Token{Type: EndOfLine, Line: 1},
 		},
 	)
 }
@@ -115,12 +115,12 @@ func Test_TokenizeComment2(t *testing.T) {
 func Test_TokenizeComment3(t *testing.T) {
 	compareTokens(t, tokenizeString(t, "/* One */{/* Two */}/* Three */"),
 		[]Token{
-			Token{Type: Comment, Literal: "/* One */"},
-			Token{Type: OpenCurly},
-			Token{Type: Comment, Literal: "/* Two */"},
-			Token{Type: CloseCurly},
-			Token{Type: Comment, Literal: "/* Three */"},
-			Token{Type: EndOfLine},
+			Token{Type: Comment, Literal: "/* One */", Line: 1},
+			Token{Type: OpenCurly, Line: 1},
+			Token{Type: Comment, Literal: "/* Two */", Line: 1},
+			Token{Type: CloseCurly, Line: 1},
+			Token{Type: Comment, Literal: "/* Three */", Line: 1},
+			Token{Type: EndOfLine, Line: 1},
 		},
 	)
 }
@@ -128,14 +128,18 @@ func Test_TokenizeComment3(t *testing.T) {
 func Test_TokenizeComment4(t *testing.T) {
 	compareTokens(t, tokenizeString(t, "/*One*/{/*Two*/}/*Three*/"),
 		[]Token{
-			Token{Type: Comment, Literal: "/*One*/"},
-			Token{Type: OpenCurly},
-			Token{Type: Comment, Literal: "/*Two*/"},
-			Token{Type: CloseCurly},
-			Token{Type: Comment, Literal: "/*Three*/"},
-			Token{Type: EndOfLine},
+			Token{Type: Comment, Literal: "/*One*/", Line: 1},
+			Token{Type: OpenCurly, Line: 1},
+			Token{Type: Comment, Literal: "/*Two*/", Line: 1},
+			Token{Type: CloseCurly, Line: 1},
+			Token{Type: Comment, Literal: "/*Three*/", Line: 1},
+			Token{Type: EndOfLine, Line: 1},
 		},
 	)
+}
+
+func Test_TokenizeMinimal(t *testing.T) {
+	tokenizeFile(t, "testdata/minimal.pbxproj")
 }
 
 func Test_TokenizeFirefox(t *testing.T) {

@@ -33,6 +33,8 @@ const (
 type Token struct {
 	Type    int
 	Literal string
+	Line    int
+	Pos     int
 }
 
 func (t Token) String() string {
@@ -125,7 +127,7 @@ func (t *Tokenizer) scanWhitespace() (Token, error) {
 		}
 	}
 
-	return Token{Type: Whitespace, Literal: buf.String()}, nil
+	return Token{Type: Whitespace, Literal: buf.String(), Line: t.line}, nil
 }
 
 func isIdentifierStartChar(c rune) bool {
@@ -157,7 +159,7 @@ func (t *Tokenizer) scanIdentifier() (Token, error) {
 		}
 	}
 
-	return Token{Type: Identifier, Literal: buf.String()}, nil
+	return Token{Type: Identifier, Literal: buf.String(), Line: t.line}, nil
 }
 
 func (t *Tokenizer) peekComment() bool {
@@ -171,13 +173,13 @@ func (t *Tokenizer) scanComment() (Token, error) {
 
 	c1 := t.read()
 	if c1 == eof {
-		return Token{}, errors.New("Unexpected")
+		return Token{Line: t.line}, errors.New("Unexpected")
 	}
 	buf.WriteRune(c1)
 
 	c2 := t.read()
 	if c2 == eof {
-		return Token{}, errors.New("Unexpected")
+		return Token{Line: t.line}, errors.New("Unexpected")
 	}
 	buf.WriteRune(c2)
 
@@ -191,12 +193,12 @@ func (t *Tokenizer) scanComment() (Token, error) {
 		if buf.Len() >= 4 {
 			bytes := buf.Bytes()
 			if bytes[len(bytes)-2] == '*' && bytes[len(bytes)-1] == '/' {
-				return Token{Type: Comment, Literal: buf.String()}, nil
+				return Token{Type: Comment, Literal: buf.String(), Line: t.line}, nil
 			}
 		}
 	}
 
-	return Token{}, fmt.Errorf("Non closed comment at %d:%d", t.line, t.index)
+	return Token{Line: t.line}, fmt.Errorf("Non closed comment at %d:%d", t.line, t.index)
 }
 
 func (t *Tokenizer) peekString() bool {
@@ -218,12 +220,12 @@ func (t *Tokenizer) scanString() (Token, error) {
 		if ch == '"' {
 			bytes := buf.Bytes()
 			if bytes[len(bytes)-2] != '\\' {
-				return Token{Type: Identifier, Literal: buf.String()}, nil
+				return Token{Type: Identifier, Literal: buf.String(), Line: t.line}, nil
 			}
 		}
 	}
 
-	return Token{}, fmt.Errorf("Non closed string at %d:%d", t.line, t.index)
+	return Token{Line: t.line}, fmt.Errorf("Non closed string at %d:%d", t.line, t.index)
 }
 
 func NewTokenizer(r io.Reader) (*Tokenizer, error) {
@@ -234,9 +236,9 @@ func (t *Tokenizer) Next() (Token, error) {
 	if t.index == -1 {
 		if !t.scanner.Scan() {
 			if err := t.scanner.Err(); err != nil {
-				return Token{}, err
+				return Token{Line: t.line}, err
 			} else {
-				return Token{Type: EndOfFile}, nil
+				return Token{Type: EndOfFile, Line: t.line}, nil
 			}
 		}
 
@@ -247,12 +249,12 @@ func (t *Tokenizer) Next() (Token, error) {
 
 	if t.buffer == "// !$*UTF8*$!" {
 		t.index = -1
-		return Token{Type: Header, Literal: t.buffer}, nil
+		return Token{Type: Header, Literal: t.buffer, Line: t.line}, nil
 	}
 
 	if t.index == len(t.buffer) {
 		t.index = -1
-		return Token{Type: EndOfLine, Literal: ""}, nil
+		return Token{Type: EndOfLine, Literal: "", Line: t.line}, nil
 	}
 
 	if t.peekWhitespace() {
@@ -275,20 +277,20 @@ func (t *Tokenizer) Next() (Token, error) {
 
 	switch c {
 	case '{':
-		return Token{Type: OpenCurly}, nil
+		return Token{Type: OpenCurly, Line: t.line}, nil
 	case '}':
-		return Token{Type: CloseCurly}, nil
+		return Token{Type: CloseCurly, Line: t.line}, nil
 	case '(':
-		return Token{Type: OpenParen}, nil
+		return Token{Type: OpenParen, Line: t.line}, nil
 	case ')':
-		return Token{Type: CloseParen}, nil
+		return Token{Type: CloseParen, Line: t.line}, nil
 	case '=':
-		return Token{Type: Equals}, nil
+		return Token{Type: Equals, Line: t.line}, nil
 	case ';':
-		return Token{Type: Semicolon}, nil
+		return Token{Type: Semicolon, Line: t.line}, nil
 	case ',':
-		return Token{Type: Comma}, nil
+		return Token{Type: Comma, Line: t.line}, nil
 	}
 
-	return Token{Type: Illegal, Literal: ""}, fmt.Errorf("Unknown token at %d:%d", t.line, t.index)
+	return Token{Type: Illegal, Literal: "", Line: t.line}, fmt.Errorf("Unknown token at %d:%d", t.line, t.index)
 }
