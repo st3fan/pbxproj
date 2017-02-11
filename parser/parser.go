@@ -11,56 +11,6 @@ type Parser struct {
 	lookahead *Token
 }
 
-type Value interface {
-	Something() string
-}
-
-//
-
-type String struct {
-	String string
-}
-
-func (s String) Something() string {
-	return s.String
-}
-
-//
-
-type Array struct {
-	Values []Value
-}
-
-func (a Array) Something() string {
-	return "TODO"
-}
-
-func (a *Array) Append(value Value) {
-	a.Values = append(a.Values, value)
-}
-
-func (a Array) Count() int {
-	return len(a.Values)
-}
-
-//
-
-type Dictionary struct {
-	Values map[string]*Value
-}
-
-func (d Dictionary) Something() string {
-	return "TODO"
-}
-
-func (d *Dictionary) Add(key string, value Value) {
-	d.Values[key] = &value
-}
-
-func (d *Dictionary) Count() int {
-	return len(d.Values)
-}
-
 func NewParser(r io.Reader) (*Parser, error) {
 	tokenizer, err := NewTokenizer(r)
 	if err != nil {
@@ -125,7 +75,7 @@ func (p *Parser) parseHeader() error {
 }
 
 func (p *Parser) parseDictionary() (*Dictionary, error) {
-	dictionary := &Dictionary{Values: make(map[string]*Value)}
+	dictionary := &Dictionary{values: make(map[string]Value)}
 
 	if _, err := p.expect(OpenCurly); err != nil {
 		return nil, err
@@ -160,7 +110,7 @@ func (p *Parser) parseDictionary() (*Dictionary, error) {
 			return nil, err
 		}
 
-		dictionary.Add(key.String, value)
+		dictionary.Add(key.literal, value)
 	}
 
 	return dictionary, nil
@@ -172,7 +122,7 @@ func (p *Parser) parseString() (*String, error) {
 		return nil, err
 	}
 	if token.Type == Identifier {
-		return &String{String: token.Literal}, nil
+		return &String{literal: token.Literal}, nil
 	}
 	return nil, fmt.Errorf("Expected Identifier or String but got %d", token.Type)
 }
